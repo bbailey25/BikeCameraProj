@@ -38,23 +38,22 @@ def removeOldestFile():
 # def recordVideo():
 
 def convertToMp4(fileName):
-    print "enter"
-    convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + "mp4" 
+    convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + ".mp4"
     call (convertToMp4Cmd, shell=True)
 
-    rmFileCmd = "rm /home/pi/Videos/" + fileName + ".h264"
-    call (rmFileCmd, shell=True)
-    print "exit"
+    rmFilePath = "/home/pi/Videos/" + fileName + ".h264"
+    os.remove(rmFilePath)
 
 def streamRecordVideo():
     while True:
         dt = datetime.datetime.now()
         print dt
-        fileName = str(dt.hour) + "_" + str(dt.minute) + "_" + str(dt.second)
-        command = "raspivid -t 300000 -vs -o /home/pi/Videos/" + fileName + ".h264"
+        fileName = ("RearCam_" + str(dt.month) + "-" + str(dt.day) + "-" +
+		str(dt.year) + "-" + str(dt.hour) + "-" + str(dt.minute) +
+		"_" + str(dt.second))
+        command = "raspivid -t 3000 -vs -o /home/pi/Videos/" + fileName + ".h264"
         call (command, shell=True)
-        convertThread = threading.Thread(target=self.convertToMp4, args=fileName)
-        convertThread.daemon = true
+        convertThread = threading.Thread(target=convertToMp4, args=(fileName,))
         convertThread.start()
 
 def main():
