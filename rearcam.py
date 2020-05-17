@@ -7,7 +7,7 @@ import os
 import datetime
 import threading
 
-SDcard_threshold = 95  # % of SD card above which we'll delete the oldest .h264 files
+SDcard_threshold = 56  # % of SD card above which we'll delete the oldest .h264 files
 
 def space_used():    # function displays amt of space left on device
     output_df = subprocess.Popen(["df", "-Ph"], stdout=subprocess.PIPE).communicate()[0]
@@ -20,15 +20,15 @@ def space_used():    # function displays amt of space left on device
         it_num += 1
     print "Card size: %s Used: %s  Available: %s  Percent used: %s  SD Threshold: %d%%" % (storage[1], storage[2], storage[3], storage[4], SDcard_threshold)
     percent_used = int(storage[4][0:-1])
-    # if percent_used > SDcard_threshold:
-    #     print "SD card %s full. Not enough space left! Removing oldest .h264 file" % storage[4]
-    #     remove_a_file()  # call our function to make some space on the card
-    #     space_used()     # call this function recursively until enough space on card
+    if percent_used > SDcard_threshold:
+         print "SD card %s full. Not enough space left! Removing oldest .h264 file" % storage[4]
+         removeOldestFile()  # call our function to make some space on the card
+         space_used()     # call this function recursively until enough space on card
 
 def removeOldestFile():
 
     try:
-        list_of_files = glob.glob('/Users/blake/Desktop/*.txt')
+        list_of_files = glob.glob('/home/pi/Videos/*.mp4')
         oldest_file = min(list_of_files, key=os.path.getctime)
         os.remove(oldest_file)
         pass
@@ -38,14 +38,17 @@ def removeOldestFile():
 # def recordVideo():
 
 def convertToMp4(fileName):
+
     convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + ".mp4"
-    call (convertToMp4Cmd, shell=True)
+    call (convertToMp4Cmd, shell=True, stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
 
     rmFilePath = "/home/pi/Videos/" + fileName + ".h264"
     os.remove(rmFilePath)
 
 def streamRecordVideo():
+
     while True:
+	space_used()
         dt = datetime.datetime.now()
         print dt
         fileName = ("RearCam_" + str(dt.month) + "-" + str(dt.day) + "-" +
@@ -57,6 +60,7 @@ def streamRecordVideo():
         convertThread.start()
 
 def main():
+
     streamRecordVideo()
 
 ###############################################################################
