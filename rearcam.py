@@ -49,8 +49,8 @@ def removeH264Files():
     filtered_files = [file for file in files_in_directory if file.endswith(".h264")]
     for file in filtered_files:
         print os.path.join(directory, file)
-	    path_to_file = os.path.join(directory, file)
-	    os.remove(path_to_file)
+        path_to_file = os.path.join(directory, file)
+        os.remove(path_to_file)
 
 ###############################################################################
 def convertToMp4(fileName):
@@ -67,8 +67,9 @@ def streamRecordVideo():
     while True:
         space_used()
         dt = datetime.datetime.now()
-        print dt
-        fileName = str(dt.hour) + "_" + str(dt.minute) + "_" + str(dt.year)
+        fileName = ("RearCam_" + str(dt.month) + "-" + str(dt.day) + "-" +
+                    str(dt.year) + "-" + str(dt.hour) + "-" + str(dt.minute) +
+                    "-" + str(dt.second))
         command = "raspivid -t 3000 -vs -o /home/pi/Videos/" + fileName + ".h264"
         call (command, shell=True)
         convertThread = threading.Thread(target=self.convertToMp4, args=fileName)
