@@ -7,8 +7,9 @@ import os
 import datetime
 import threading
 
-SDcard_threshold = 56  # % of SD card above which we'll delete the oldest .h264 files
+SDcard_threshold = 58  # % of SD card above which we'll delete the oldest .h264 files
 
+###############################################################################
 def space_used():    # function displays amt of space left on device
     output_df = subprocess.Popen(["df", "-Ph"], stdout=subprocess.PIPE).communicate()[0]
 
@@ -20,11 +21,13 @@ def space_used():    # function displays amt of space left on device
         it_num += 1
     print "Card size: %s Used: %s  Available: %s  Percent used: %s  SD Threshold: %d%%" % (storage[1], storage[2], storage[3], storage[4], SDcard_threshold)
     percent_used = int(storage[4][0:-1])
-    if percent_used > SDcard_threshold:
-         print "SD card %s full. Not enough space left! Removing oldest .h264 file" % storage[4]
-         removeOldestFile()  # call our function to make some space on the card
-         space_used()     # call this function recursively until enough space on card
 
+    if percent_used > SDcard_threshold:
+        print "SD card %s full. Not enough space left! Removing oldest .h264 file" % storage[4]
+        removeOldestFile()  # call our function to make some space on the card
+        space_used()     # call this function recursively until enough space on card
+
+###############################################################################
 def removeOldestFile():
 
     try:
@@ -35,32 +38,43 @@ def removeOldestFile():
     except ValueError:
         pass
 
+###############################################################################
 # def recordVideo():
 
+###############################################################################
+def removeH264Files():
+
+    rmFilesCmd = "rm /home/pi/Videos/*.h264"
+    call (rmFilesCmd, shell=True)
+
+###############################################################################
 def convertToMp4(fileName):
 
     convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + ".mp4"
     call (convertToMp4Cmd, shell=True, stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
 
-    rmFilePath = "/home/pi/Videos/" + fileName + ".h264"
-    os.remove(rmFilePath)
+    rmFileCmd = "rm /home/pi/Videos/" + fileName + ".h264"
+    call (rmFileCmd, shell=True)
 
+###############################################################################
 def streamRecordVideo():
 
     while True:
-	space_used()
+        space_used()
         dt = datetime.datetime.now()
         print dt
-        fileName = ("RearCam_" + str(dt.month) + "-" + str(dt.day) + "-" +
-		str(dt.year) + "-" + str(dt.hour) + "-" + str(dt.minute) +
-		"_" + str(dt.second))
+        fileName = str(dt.hour) + "_" + str(dt.minute) + "_" + str(dt.year)
         command = "raspivid -t 3000 -vs -o /home/pi/Videos/" + fileName + ".h264"
         call (command, shell=True)
-        convertThread = threading.Thread(target=convertToMp4, args=(fileName,))
+        convertThread = threading.Thread(target=self.convertToMp4, args=fileName)
+        convertThread.daemon = true
         convertThread.start()
 
+###############################################################################
 def main():
 
+    #before recording we should make sure all .h264 files are deleted!!!!
+    removeH264Files()
     streamRecordVideo()
 
 ###############################################################################
