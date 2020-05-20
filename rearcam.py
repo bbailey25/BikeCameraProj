@@ -44,8 +44,13 @@ def removeOldestFile():
 ###############################################################################
 def removeH264Files():
 
-    rmFilesCmd = "rm /home/pi/Videos/*.h264"
-    call (rmFilesCmd, shell=True)
+    directory = "/home/pi/Videos"
+    files_in_directory = os.listdir(directory)
+    filtered_files = [file for file in files_in_directory if file.endswith(".h264")]
+    for file in filtered_files:
+        print os.path.join(directory, file)
+	    path_to_file = os.path.join(directory, file)
+	    os.remove(path_to_file)
 
 ###############################################################################
 def convertToMp4(fileName):
@@ -53,8 +58,8 @@ def convertToMp4(fileName):
     convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + ".mp4"
     call (convertToMp4Cmd, shell=True, stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
 
-    rmFileCmd = "rm /home/pi/Videos/" + fileName + ".h264"
-    call (rmFileCmd, shell=True)
+    fileLoc = "/home/pi/Videos/" + fileName + ".h264"
+    os.remove(fileLoc)
 
 ###############################################################################
 def streamRecordVideo():
