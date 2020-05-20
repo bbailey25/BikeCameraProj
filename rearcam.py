@@ -72,8 +72,7 @@ def streamRecordVideo():
                     "-" + str(dt.second))
         command = "raspivid -t 3000 -vs -o /home/pi/Videos/" + fileName + ".h264"
         call (command, shell=True)
-        convertThread = threading.Thread(target=self.convertToMp4, args=fileName)
-        convertThread.daemon = true
+        convertThread = threading.Thread(target=convertToMp4, args=(fileName,))
         convertThread.start()
 
 ###############################################################################
