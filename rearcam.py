@@ -7,8 +7,10 @@ import os
 import datetime
 import threading
 
-SDcard_threshold = 58  # % of SD card above which we'll delete the oldest .h264 files
-firstRecording = False
+
+import time
+SDcard_threshold = 95  # % of SD card above which we'll delete the oldest .h264 files
+VideoLength = 300000   # Length of video (seconds times 1000)
 
 ###############################################################################
 def space_used():    # function displays amt of space left on device
@@ -25,7 +27,7 @@ def space_used():    # function displays amt of space left on device
     percent_used = int(storage[4][0:-1])
 
     if percent_used > SDcard_threshold:
-        print "SD card %s full. Not enough space left! Removing oldest .mp4 file" % storage[4]
+        print "SD card %s full. Not enough space left! Removing oldest .h264 file" % storage[4]
         removeOldestFile()  # call our function to make some space on the card
         space_used()     # call this function recursively until enough space on card
 
@@ -33,26 +35,12 @@ def space_used():    # function displays amt of space left on device
 def removeOldestFile():
 
     try:
-        list_of_files = glob.glob('/home/pi/Videos/*.mp4')
+        list_of_files = glob.glob('/home/pi/Videos/*.h264')
         oldest_file = min(list_of_files, key=os.path.getctime)
         os.remove(oldest_file)
         pass
     except ValueError:
         pass
-
-###############################################################################
-def writeRecNum(recNum):
-    recFile = open("/home/pi/Videos/video_recording_number.txt", 'w')
-    recFile.write(str(recNum))
-    recFile.close()
-
-###############################################################################
-def getRecNum():
-    recFile = open("/home/pi/Videos/video_recording_number.txt", 'r')
-    rec_num = int(vrn.readline())
-    print "rec_num is %d" % rec_num
-    vrn.close()
-    return rec_num
 
 ###############################################################################
 def removeH264Files():
@@ -66,42 +54,28 @@ def removeH264Files():
         os.remove(path_to_file)
 
 ###############################################################################
-def convertToMp4(fileName):
-
-    convertToMp4Cmd = "MP4Box -add /home/pi/Videos/" + fileName + ".h264 " + "/home/pi/Videos/" + fileName + ".mp4"
-    call (convertToMp4Cmd, shell=True, stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-
-    fileLoc = "/home/pi/Videos/" + fileName + ".h264"
-    os.remove(fileLoc)
-
-###############################################################################
 def streamRecordVideo():
 
+    firstRecording = True
     while True:
         space_used()
         dt = datetime.datetime.now()
-        recordingNumber = getRecNum()
-        title = ""
-        if firstRecording:
-            title = "_FirstRearCam_"
+        if firstRecording is True:
+            title = "FirstRearCam_"
             firstRecording = False
         else:
-            title = "_RearCam_"
+            title = "RearCam_"
 
-        fileName = (recordingNumber + title + str(dt.month) + "-" + str(dt.day) + "-" +
+        fileName = (title + str(dt.month) + "-" + str(dt.day) + "-" +
                     str(dt.year) + "-" + str(dt.hour) + "-" + str(dt.minute) +
                     "-" + str(dt.second))
 
-        command = "raspivid -t 3000 -vs -o /home/pi/Videos/" + fileName + ".h264"
+        command = "raspivid -t " + str(VideoLength) + " -vs -o /home/pi/Videos/" + fileName + ".h264 -b 8500000"
         call (command, shell=True)
-        writeRecNum(recordingNumber+=1)
-        convertThread = threading.Thread(target=convertToMp4, args=(fileName,))
-        convertThread.start()
 
 ###############################################################################
 def main():
 
-    removeH264Files()
     streamRecordVideo()
 
 ###############################################################################
